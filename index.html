@@ -1,0 +1,296 @@
+<html>
+	<head>
+		<title>Time Dilation - WebGL</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="apple-mobile-web-app-capable" content="yes"/>
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+		
+		<link rel='stylesheet' type='text/css' href='style.css'/>
+		<script language='javascript' type='text/javascript' src='../js/jquery-1.10.0.min.js'></script>
+		<script language='javascript' type='text/javascript' src='../js/util.js'></script>
+		<script language='javascript' type='text/javascript' src='../js/gl-matrix-min.js'></script>
+		<script language='javascript' type='text/javascript' src='../js/gl-util.js'></script>
+		<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+		<script language='javascript' type='text/javascript' src='main.js'></script>
+		
+<script type='text/javascript'>
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-17312646-1']);
+_gaq.push(['_trackPageview']);
+(function() {
+	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+	ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+})();
+</script>
+
+<script type='text/javascript'>
+MathJax.Hub.Queue(function(){
+	//refresh display now that mathjax is done messing the dom up
+	//...because for some reason as soon as it gets done initializing it hides
+	//console.log('testing');
+	//$('#panel').css('z-index', 1).appendTo(document.body);
+});
+</script>
+
+		<script id='plain-vsh' type='x-shader/x-vertex'>
+attribute vec3 vtx;
+uniform mat4 mvMat;
+uniform mat4 projMat;
+void main() {
+	vec4 eyePos = mvMat * vec4(vtx, 1.);
+	gl_Position = projMat * eyePos;
+}
+		</script>
+		<script id='plain-fsh' type='x-shader/x-fragment'>
+precision mediump float;
+uniform vec3 color;
+void main() {
+	gl_FragColor = vec4(color, 1.);
+}
+		</script>
+
+
+	</head>
+	<body style='margin:0px; overflow:hidden'>
+		<div id='panel' style='overflow:scroll; width:40%; height:100%; z-index:1; position:absolute; background-color:rgba(0,0,0,.75)'>
+			<input name='boostFollow' type='checkbox'/>Follow Particle<br>
+			
+			<!-- input name='boostVel' type='text'/>Boost Velocity<br -->
+			<!-- input name='boostSpace' type='text'/>Boost Space<br -->
+			<!-- input name='boostTime' type='text'/>Boost Time<br -->
+			<input name='showTrace' type='checkbox'/>Show Trace<br>
+			<input name='showPreBoost' type='checkbox'/>Show Pre Boost Frame<br>
+			<input name='showPostBoost' type='checkbox'/>Show Post Boost Frame<br>
+
+<h3>The Twin Paradox:</h3>
+Take some twins. Have one stay on earth while the other gets in a rocket ship and flies to the
+center of the universe and back.  Upon arrival back home, the space traveller realizes they
+are a time traveller as well. Everyone else has aged far beyond his expectation while
+he was gone. His twin is now his older sibling.<br>
+<h3>How it works:</h3>
+Lets say you are standing on Earth at position \(x^i = (x^1, x^0, x^3)\) 
+with velocity \(v^i = (v^1, v^2, v^3)\).<br>
+<br>
+Special relativity tells that, in flat spacetime,
+as your velocity in space changes, so does the rate you travel through time.
+The two are linked together such that the combined 4-velocity 
+\(u^\mu = (u^0, u^1, u^2, u^3)\) always has a norm of -1.<br>
+<br>
+The norm is calculated as \(||u|| = u \cdot u = u^\mu u_\mu = u^\mu \eta_{\mu\nu} u^\nu\),
+where \(\eta_{\mu\nu} = diag(-1,1,1,1)\) is the metric tensor of flat space.
+Vector norms under metric tensors are calculated as weighted inner products, written out as:<br>
+\(
+u^\mu \eta_{\mu\nu} u^\nu =
+
+\left[
+\matrix
+{
+u^0 u^1 u^2 u^3
+}
+\right]
+
+\left[
+\matrix
+{
+-1&0&0&0 \\
+ 0&1&0&0 \\
+ 0&0&1&0 \\  
+ 0&0&0&1
+}
+\right]
+
+\left[
+\matrix
+{
+u^0 \\
+u^1 \\
+u^2 \\  
+u^3
+}
+\right]
+
+\)
+<br>
+or, condensed, as \(u^\mu \eta_{\mu\nu} u^\nu = -(u^0)^2 + (u^1)^2 + (u^2)^2 + (u^3)^2 \).<br>
+<br>
+Back to our 3-velocity \(v^i\) here on planet Earth.  It has no such constraints.
+Nor does it have any notion of how fast it is going through time.  	
+That information is calculated as follows:<br>
+<br>
+\( u^0 = \gamma, u^i = \gamma v^i \) for i our index running from 1 to 3.
+The new term introduced to govern our velocity through time and to maintain our norm is 
+\( \gamma = {1 \over \sqrt{1 - v \cdot v}} \).
+From this we can calculate:
+\( u^\mu u_\mu = -(u^0)^2 + (u^1)^2 + (u^2)^2 + (u^3)^2 \)
+\( u^\mu u_\mu = -\gamma^2 + (v^1)^2 \gamma^2 + (v^2)^2 \gamma^2 + (v^3)^2 \gamma^2 \)
+\( u^\mu u_\mu = \gamma^2(-1 + v \cdot v) = {-1 + v \cdot v \over 1 - v \cdot v} = -1 \) <br>
+<br>
+With this constraint and this transform we find that, while 3-velocity is limited to 1
+(the speed of light in our current units of measurement), the 4-velocity has no limit.
+The two interchange as follows:<br>
+<br>
+<img src='relvel.svg'/><br>
+Back to our constraint \( -(u^0)^2 + (u^i)^2 = -1 \).<br>
+It turns out this fits the form of hyperbolic functions, \( -cosh^2 (\theta) + sinh^2 (\theta) = -1 \).<br>
+From here we can make the following relations:<br>
+\( u^0 = cosh(\theta) \)<br>
+\( u^i = sinh(\theta) \hat u^i \),<br>
+for \( \hat u^i \) the unit velocity vector, equal whether we normalize the 3-velocity or 4-velocity:<br>
+\( \hat u^i = {u^i \over \sum (u^j)^2} \)
+<br>
+<br>
+From this we can differentiate to find the acceleration.<br>
+Consider the 1+1 dimensional case:<br>
+\( a^\mu = {d \over d\tau} u^\mu \)<br>
+\( a^\mu = {d \over d\tau} (cosh(\theta), sinh(\theta) ) \)<br>
+\( a^\mu = (sinh(\theta), cosh(\theta) ) {d\theta \over d\tau} \)<br>
+<br>
+From here we assume our acceleration is constant with respect to proper time, say \( \theta = g \tau \)<br>
+\( a^\mu = (sinh(g \tau), cosh(g \tau) ) {d \over d\tau} (g \tau) \)<br>
+\( a^\mu = (sinh(g \tau), cosh(g \tau) ) g \)<br>
+We can verify our results:<br>
+\( ||a||^2 = a \cdot a = a^\mu a_\mu = -(sinh(g \tau) g)^2 + (cosh(g \tau) g)^2 \)<br>
+\( ||a||^2 = g^2 (-sinh^2(g \tau) + cosh^2(g \tau)) \)<br>
+\( ||a||^2 = g^2 \)<br>
+\( ||a|| = g \)<br>
+Sure enough, constant acceleration.<br>
+<br>
+Now that we can rest easy about the acceleration, we can move on to the position:<br>
+\( x^\mu = \int u^\mu d\tau \)<br>
+\( x^\mu = \int (cosh(g \tau), sinh(g \tau) \hat u^i ) d\tau \)<br>
+\( x^\mu = {1 \over g} (sinh(g \tau), cosh(g \tau)) \)<br>
+<br>
+So now that we have the math for a moving frame, now we can get to the 'relativity' in 'special relativity'.  
+Special relativity is a model that describes relativity in a flat spacetime.
+Relativity is the notion that all calculations in physics can be performed relative to any arbitrary frame of reference.
+There is no origin.<br>
+<br>
+To apply this to our problem at hand, consider the twin travelling away.  From the stationary twin he appears to be
+departing at some velocity.  But to the travelling twin he appears to be at rest while the Earth is moving in the opposite direction.
+To make things more confusing, light is always the speed limit no matter what frame of reference you're in.  Be it on Earth or in a moving spaceship,
+the speed of light is still the speed of light.  Enter Lorentz boosts.<br>
+<br>
+Let's say that, from Earth, it seems you're travelling along at \( u^\mu = (cosh(\theta), sinh(theta) \hat u^i) \).
+But relative to yourself you seem to be at rest.  How to go from one to the other?
+What are we working with?  Let's go back to our 1D case, so \(u^\mu = (u^0, u^1, 0, 0) = (\gamma, \gamma v, 0, 0)\),
+for \(\gamma = {1 \over \sqrt{1 - v^2}}\).
+Then for simplicity, let \(\beta = \gamma v\), so \(u^\mu = (\gamma, \beta, 0, 0)\).<br>
+<br>
+\(
+\left[
+\matrix
+{
+u^0 \\
+u^1 \\
+u^2 \\  
+u^3
+}
+\right]
+
+= 
+
+\left[
+\matrix
+{
+\gamma \\
+\beta \\
+0 \\  
+0
+}
+\right]
+
+\)<br>
+<br>
+How would you transform this to shift the velocity from motion to rest?  
+You have to shift space left and right until your velocity lines up to zero in your resting frame.  But then your speed of light speed limit gets out of whack.  How do you fix that too?
+Just shift time up or down to correct.<br>
+\( \Lambda_{\mu\nu} u^\nu = u'^\mu = (1,0,0,0) \)<br>
+Or in matrix form:<br>
+<br>
+\(
+\left[
+\matrix
+{
+\gamma&-\beta&0&0 \\
+-\beta&\gamma&0&0 \\
+ 0&0&1&0 \\  
+ 0&0&0&1
+}
+\right]
+
+\left[
+\matrix
+{
+\gamma \\
+\beta \\
+0 \\  
+0
+}
+\right]
+
+=
+
+\left[
+\matrix
+{
+\gamma^2 - \beta^2 \\
+-\beta\gamma + \beta\gamma \\
+0 \\  
+0
+}
+\right]
+=
+
+\left[
+\matrix
+{
+{1 - v^2 \over 1 - v^2} \\
+0 \\
+0 \\  
+0
+}
+\right]
+
+=
+
+\left[
+\matrix
+{
+1 \\
+0 \\
+0 \\  
+0
+}
+\right]
+
+\)<br>
+<br>
+So we see that, after the Lorentz boost \( \Lambda_{\mu\nu} \) is applied, our velocity becomes relative to our local frame of reference.<br>
+<br>
+Assume we accelerate at a constant rate of acceleration for the first half of the trip,<br>
+then slow with constant deceleration for the second.<br>
+How long will it take, and how far apart will the two clocks be?<br>
+<br>
+\(  \)
+<br>
+
+		
+		</div>
+		<div id='webglfail' style='display:none'>
+			Sorry, your browser does not support WebGL<br>
+			Try one of these other, better browsers:<br>
+			<a href='http://www.google.com/chrome'>Chrome</a><br>
+			<a href='http://www.mozilla.org/firefox'>Firefox</a><br>
+			<a href='http://www.apple.com/safari'>Safari</a><br>
+			<b>Opera Users:</b><br>
+			Enter "opera:config" in the address bar.<br>
+			In the "User Prefs" section set both "Enable Hardware Acceleration" and "Enable WebGL" to "1" and then click "Save".<br>
+			It is still buggy.<br>
+			<b>IE Users:</b><br>
+			Sorry guys, IE doesn&rsquo;t plan to support WebGL.<br>
+			Consider using a more <a href='http://www.w3schools.com/browsers/browsers_stats.asp'>standard compliant</a> browser.<br>
+			<br>
+		</div>
+	</body>
+</html>
