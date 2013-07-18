@@ -1,4 +1,5 @@
 var canvas;
+var panel;
 var gl;
 var plainShader;
 var view;
@@ -368,6 +369,7 @@ $(document).ready(function(){
 		}
 	}).prependTo(document.body).get(0);
 	$(canvas).disableSelection();
+	panel = $('#panel');
 
 	try {
 		gl = GL.init(canvas);
