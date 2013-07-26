@@ -18,8 +18,6 @@ var showPreBoost = true;
 var showPostBoost = false;
 var followTrace;
 
-var lineArray = [];
-var lineBuffer;
 var lineObj;
 
 
@@ -31,10 +29,11 @@ args:
 */
 function drawLine(args) {
 	for (var i = 0; i < 3; i++) {
-		lineArray[i] = args.pts[0][i];
-		lineArray[i+3] = args.pts[1][i];
+		lineObj.attrs.vertex.data[i] = args.pts[0][i];
+		lineObj.attrs.vertex.data[i+3] = args.pts[1][i];
 	}
-	lineBuffer.updateData(lineArray);
+	lineObj.attrs.vertex.updateData();
+
 	//and do the draw ...
 	lineObj.draw({
 		uniforms : {
@@ -150,6 +149,7 @@ function resize() {
 	GL.view.pos[1] = (view.maxY + view.minY) / 2; 
 	GL.view.pos[2] = 10;
 	GL.view.fovY = (view.maxY - view.minY) / 2;
+
 	GL.resize();
 }
 
@@ -209,7 +209,7 @@ function update() {
 	}
 
 	GL.ondraw = function() {
-	
+
 		var renderGrid = function() {
 			//render grid
 			for (var i=Math.ceil(view.minX); i <= Math.floor(view.maxX); i++) { 
@@ -321,6 +321,7 @@ function update() {
 	};
 
 	GL.draw();
+
 	requestAnimFrame(update);
 
 	if (restTime > 50) initProblem();
@@ -379,6 +380,7 @@ $(document).ready(function(){
 		$('#webglfail').show();
 		throw e;
 	}
+	GL.dontDrawOnResize = true;
 
 	$('input[name=boostFollow]').change(function() {
 		boostFollow = $('input[name=boostFollow]').get(0).checked;
@@ -398,23 +400,23 @@ $(document).ready(function(){
 		fragmentCodeID : 'plain-fsh'
 	});
 
-	lineArray = new Float32Array(6);
-
-	lineBuffer = new GL.ArrayBuffer({
-		data : lineArray,
-		usage : gl.DYNAMIC_DRAW
-	});
-
 	lineObj = new GL.SceneObject({
 		mode : gl.LINES,
-		count : 2,
 		shader : plainShader,
 		uniforms : { color : [1,1,1] },
-		attrs : { vtx : lineBuffer }
+		attrs : { 
+			vertex : new GL.ArrayBuffer({
+				data : new Float32Array(6),
+				usage : gl.DYNAMIC_DRAW,
+				keep : true
+			})
+		},
+		parent : null,
+		static : true
 	});
 
 	initProblem();
-	
+
 	view = {
 		posX : 0, posY : 0,
 		minX : 0, minY : 0,
@@ -436,6 +438,7 @@ $(document).ready(function(){
 
 	$(window).resize(resize);
 	resize();
+
 	update();
 });
 

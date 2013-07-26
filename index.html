@@ -6,10 +6,10 @@
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 		
 		<link rel='stylesheet' type='text/css' href='style.css'/>
-		<script type='text/javascript' src='../js/jquery-1.10.0.min.js'></script>
-		<script type='text/javascript' src='../js/util.js'></script>
-		<script type='text/javascript' src='../js/gl-matrix-min.js'></script>
-		<script type='text/javascript' src='../js/gl-util.js'></script>
+		<script type='text/javascript' src='/js/jquery-1.10.0.min.js'></script>
+		<script type='text/javascript' src='/js/util.js'></script>
+		<script type='text/javascript' src='/js/gl-matrix-min.js'></script>
+		<script type='text/javascript' src='/js/gl-util.js'></script>
 		<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 		<script type='text/javascript' src='main.js'></script>
 		
@@ -25,11 +25,11 @@ _gaq.push(['_trackPageview']);
 </script>
 
 		<script id='plain-vsh' type='x-shader/x-vertex'>
-attribute vec3 vtx;
+attribute vec3 vertex;
 uniform mat4 mvMat;
 uniform mat4 projMat;
 void main() {
-	vec4 eyePos = mvMat * vec4(vtx, 1.);
+	vec4 eyePos = mvMat * vec4(vertex, 1.);
 	gl_Position = projMat * eyePos;
 }
 		</script>
