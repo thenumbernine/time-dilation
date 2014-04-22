@@ -396,8 +396,21 @@ $(document).ready(function(){
 	}).get(0).checked = showPostBoost;
 
 	plainShader = new GL.ShaderProgram({
-		vertexCodeID : 'plain-vsh',
-		fragmentCodeID : 'plain-fsh'
+		vertexCode : mlstr(function(){/*
+attribute vec3 vertex;
+uniform mat4 mvMat;
+uniform mat4 projMat;
+void main() {
+	vec4 eyePos = mvMat * vec4(vertex, 1.);
+	gl_Position = projMat * eyePos;
+}*/}),
+		vertexPrecision : 'best',
+		fragmentCodeID : mlstr(function(){/*
+uniform vec3 color;
+void main() {
+	gl_FragColor = vec4(color, 1.);
+}*/}),
+		fragmentPrecision : 'best'
 	});
 
 	lineObj = new GL.SceneObject({

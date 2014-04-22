@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 	<head>
 		<title>Time Dilation - WebGL</title>
@@ -24,27 +25,9 @@ _gaq.push(['_trackPageview']);
 })();
 </script>
 
-		<script id='plain-vsh' type='x-shader/x-vertex'>
-attribute vec3 vertex;
-uniform mat4 mvMat;
-uniform mat4 projMat;
-void main() {
-	vec4 eyePos = mvMat * vec4(vertex, 1.);
-	gl_Position = projMat * eyePos;
-}
-		</script>
-		<script id='plain-fsh' type='x-shader/x-fragment'>
-precision mediump float;
-uniform vec3 color;
-void main() {
-	gl_FragColor = vec4(color, 1.);
-}
-		</script>
-
-
 	</head>
 	<body style='margin:0px; overflow:hidden'>
-		<div id='panel' style='overflow:scroll; width:40%; height:100%; z-index:1; position:absolute; background-color:rgba(0,0,0,.5)'>
+		<div id='panel' style='overflow:scroll; min-width:300px; width:40%; height:100%; z-index:1; position:absolute; background-color:rgba(0,0,0,.5)'>
 			<input name='boostFollow' type='checkbox'/>Follow Particle<br>
 			
 			<!-- input name='boostVel' type='text'/>Boost Velocity<br -->
@@ -60,7 +43,7 @@ center of the universe and back.  Upon arrival back home, the space traveller re
 are a time traveller as well. Everyone else has aged far beyond his expectation while
 he was gone. His twin is now his older sibling.<br>
 <h3>How it works:</h3>
-Lets say you are standing on Earth at position \(x^i = (x^1, x^0, x^3)\) 
+Lets say you are standing on Earth at position \(x^i = (x^1, x^2, x^3)\) 
 with velocity \(v^i = (v^1, v^2, v^3)\).<br>
 <br>
 Special relativity tells that, in flat spacetime,
