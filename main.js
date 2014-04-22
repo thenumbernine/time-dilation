@@ -1,7 +1,5 @@
 var canvas;
-var panel;
 var gl;
-var plainShader;
 var view;
 var traces = [];
 var restTrace, movingTrace;
@@ -151,6 +149,17 @@ function resize() {
 	GL.view.fovY = (view.maxY - view.minY) / 2;
 
 	GL.resize();
+
+
+	var info = $('#info');
+	var width = window.innerWidth 
+		- parseInt(info.css('padding-left'))
+		- parseInt(info.css('padding-right0'));
+	info.css(width + 'px');
+	var height = window.innerHeight
+		- parseInt(info.css('padding-top'))
+		- parseInt(info.css('padding-bottom'));
+	info.height(height - 32);
 }
 
 function update() {
@@ -362,6 +371,26 @@ function initProblem() {
 }
 
 $(document).ready(function(){
+	$('#panelButton').click(function() {
+		var panel = $('#panel');	
+		if (panel.css('display') == 'none') {
+			panel.show();
+			$('#info').hide();
+		} else {
+			panel.hide();
+		}
+	});
+	$('#infoButton').click(function() {
+		var info = $('#info');
+		if (info.css('display') == 'none') {
+			info.show();
+			$('#panel').hide();
+		} else {
+			info.hide();
+		}
+	});
+	
+	
 	canvas = $('<canvas>', {
 		css : {
 			left : 0,
@@ -370,16 +399,16 @@ $(document).ready(function(){
 		}
 	}).prependTo(document.body).get(0);
 	$(canvas).disableSelection();
-	panel = $('#panel');
 
 	try {
 		gl = GL.init(canvas);
 	} catch (e) {
-		panel.remove();
 		$(canvas).remove();
 		$('#webglfail').show();
 		throw e;
 	}
+	$('#menu').show();
+	
 	GL.dontDrawOnResize = true;
 
 	$('input[name=boostFollow]').change(function() {
@@ -395,7 +424,8 @@ $(document).ready(function(){
 		showPostBoost = $('input[name=showPostBoost]').get(0).checked;
 	}).get(0).checked = showPostBoost;
 
-	plainShader = new GL.ShaderProgram({
+	var plainShader = new GL.ShaderProgram({
+		vertexPrecision : 'best',
 		vertexCode : mlstr(function(){/*
 attribute vec3 vertex;
 uniform mat4 mvMat;
@@ -404,13 +434,12 @@ void main() {
 	vec4 eyePos = mvMat * vec4(vertex, 1.);
 	gl_Position = projMat * eyePos;
 }*/}),
-		vertexPrecision : 'best',
-		fragmentCodeID : mlstr(function(){/*
+		fragmentPrecision : 'best',
+		fragmentCode : mlstr(function(){/*
 uniform vec3 color;
 void main() {
 	gl_FragColor = vec4(color, 1.);
-}*/}),
-		fragmentPrecision : 'best'
+}*/})
 	});
 
 	lineObj = new GL.SceneObject({

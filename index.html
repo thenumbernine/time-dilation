@@ -27,7 +27,11 @@ _gaq.push(['_trackPageview']);
 
 	</head>
 	<body style='margin:0px; overflow:hidden'>
-		<div id='panel' style='overflow:scroll; min-width:300px; width:40%; height:100%; z-index:1; position:absolute; background-color:rgba(0,0,0,.5)'>
+		<div id='menu' style='position:absolute'>
+			<img id='panelButton' src='menu.png' style='padding:5px'/>
+			<button id='infoButton' style='background-color:black; color:white; width:24px; height:24px; border:1px solid white; cursor:pointer; display:table-cell; align:center; vertical-align:top; margin:5px'>?</button><br>
+		</div>
+		<div id='panel' style='overflow:scroll; z-index:1; position:absolute; top:32px; display:none'>
 			<input name='boostFollow' type='checkbox'/>Follow Particle<br>
 			
 			<!-- input name='boostVel' type='text'/>Boost Velocity<br -->
@@ -36,7 +40,9 @@ _gaq.push(['_trackPageview']);
 			<input name='showTrace' type='checkbox'/>Show Trace<br>
 			<input name='showPreBoost' type='checkbox'/>Show Pre Boost Frame<br>
 			<input name='showPostBoost' type='checkbox'/>Show Post Boost Frame<br>
+		</div>
 
+		<div id='info' style='display:none; overflow:scroll; top:32px; z-index:1; position:absolute; background-color:rgba(255,255,255,.85); color:black; padding:10px'>
 <h3>The Twin Paradox:</h3>
 Take some twins. Have one stay on earth while the other gets in a rocket ship and flies to the
 center of the universe and back.  Upon arrival back home, the space traveller realizes they
@@ -179,7 +185,7 @@ u^3
 How would you transform this to shift the velocity from motion to rest?  
 You have to shift space left and right until your velocity lines up to zero in your resting frame.  But then your speed of light speed limit gets out of whack.  How do you fix that too?
 Just shift time up or down to correct.<br>
-\( \Lambda_{\mu\nu} u^\nu = u'^\mu = (1,0,0,0) \)<br>
+\( {\Lambda^\mu}_\nu u^\nu = u'^\mu = (1,0,0,0) \)<br>
 Or in matrix form:<br>
 <br>
 \(
@@ -240,7 +246,7 @@ Or in matrix form:<br>
 
 \)<br>
 <br>
-So we see that, after the Lorentz boost \( \Lambda_{\mu\nu} \) is applied, our velocity becomes relative to our local frame of reference.<br>
+So we see that, after the Lorentz boost \( {\Lambda^\mu}_\nu \) is applied, our velocity becomes relative to our local frame of reference.<br>
 <br>
 Assume we accelerate at a constant rate of acceleration for the first half of the trip,<br>
 then slow with constant deceleration for the second.<br>
