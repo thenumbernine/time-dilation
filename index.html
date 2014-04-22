@@ -115,9 +115,9 @@ Back to our constraint \( -(u^0)^2 + (u^i)^2 = -1 \).<br>
 It turns out this fits the form of hyperbolic functions, \( -cosh^2 (\theta) + sinh^2 (\theta) = -1 \).<br>
 From here we can make the following relations:<br>
 \( u^0 = cosh(\theta) \)<br>
-\( u^i = sinh(\theta) \hat u^i \),<br>
-for \( \hat u^i \) the unit velocity vector, equal whether we normalize the 3-velocity or 4-velocity:<br>
-\( \hat u^i = {u^i \over \sum (u^j)^2} \)
+\( u^i = sinh(\theta) {\hat u}^i \),<br>
+for \( {\hat u}^i \) the unit velocity vector, equal whether we normalize the 3-velocity or 4-velocity:<br>
+\( {\hat u}^i = {u^i \over \sum (u^j)^2} \)
 <br>
 <br>
 From this we can differentiate to find the acceleration.<br>
@@ -138,7 +138,7 @@ Sure enough, constant acceleration.<br>
 <br>
 Now that we can rest easy about the acceleration, we can move on to the position:<br>
 \( x^\mu = \int u^\mu d\tau \)<br>
-\( x^\mu = \int (cosh(g \tau), sinh(g \tau) \hat u^i ) d\tau \)<br>
+\( x^\mu = \int (cosh(g \tau), sinh(g \tau) {\hat u}^i ) d\tau \)<br>
 \( x^\mu = {1 \over g} (sinh(g \tau), cosh(g \tau)) \)<br>
 <br>
 So now that we have the math for a moving frame, now we can get to the 'relativity' in 'special relativity'.  
@@ -151,7 +151,7 @@ departing at some velocity.  But to the travelling twin he appears to be at rest
 To make things more confusing, light is always the speed limit no matter what frame of reference you're in.  Be it on Earth or in a moving spaceship,
 the speed of light is still the speed of light.  Enter Lorentz boosts.<br>
 <br>
-Let's say that, from Earth, it seems you're travelling along at \( u^\mu = (cosh(\theta), sinh(theta) \hat u^i) \).
+Let's say that, from Earth, it seems you're travelling along at \( u^\mu = (cosh(\theta), sinh(theta) {\hat u}^i) \).
 But relative to yourself you seem to be at rest.  How to go from one to the other?
 What are we working with?  Let's go back to our 1D case, so \(u^\mu = (u^0, u^1, 0, 0) = (\gamma, \gamma v, 0, 0)\),
 for \(\gamma = {1 \over \sqrt{1 - v^2}}\).
