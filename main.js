@@ -403,7 +403,7 @@ $(document).ready(function(){
 
 	try {
 		renderer = new GL.CanvasRenderer({canvas:canvas});
-		gl = renderer.gl;
+		gl = renderer.context;
 	} catch (e) {
 		$(canvas).remove();
 		$('#webglfail').show();
@@ -427,6 +427,7 @@ $(document).ready(function(){
 	}).get(0).checked = showPostBoost;
 
 	var plainShader = new GL.ShaderProgram({
+		context : gl,
 		vertexPrecision : 'best',
 		vertexCode : mlstr(function(){/*
 attribute vec3 vertex;
@@ -445,14 +446,16 @@ void main() {
 	});
 
 	lineObj = new GL.SceneObject({
+		context : gl,
+		scene : renderer.scene,
 		mode : gl.LINES,
 		shader : plainShader,
 		uniforms : { color : [1,1,1] },
 		attrs : { 
 			vertex : new GL.ArrayBuffer({
+				context : gl,
 				data : new Float32Array(6),
-				usage : gl.DYNAMIC_DRAW,
-				keep : true
+				usage : gl.DYNAMIC_DRAW
 			})
 		},
 		parent : null,
