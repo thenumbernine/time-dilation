@@ -1,6 +1,6 @@
 var canvas;
 var gl;
-var renderer;
+var glutil;
 var view;
 var traces = [];
 var restTrace, movingTrace;
@@ -143,13 +143,13 @@ function resize() {
 	view.aspectRatio = canvas.width / canvas.height;
 	view.calcRange();
 
-	renderer.view.ortho = true;
-	renderer.view.pos[0] = (view.maxX + view.minX) / 2; 
-	renderer.view.pos[1] = (view.maxY + view.minY) / 2; 
-	renderer.view.pos[2] = 10;
-	renderer.view.fovY = (view.maxY - view.minY) / 2;
+	glutil.view.ortho = true;
+	glutil.view.pos[0] = (view.maxX + view.minX) / 2; 
+	glutil.view.pos[1] = (view.maxY + view.minY) / 2; 
+	glutil.view.pos[2] = 10;
+	glutil.view.fovY = (view.maxY - view.minY) / 2;
 
-	renderer.resize();
+	glutil.resize();
 
 
 	var info = $('#info');
@@ -218,7 +218,7 @@ function update() {
 		}
 	}
 
-	renderer.ondraw = function() {
+	glutil.ondraw = function() {
 
 		var renderGrid = function() {
 			//render grid
@@ -261,7 +261,7 @@ function update() {
 				boostVel * boostU[0]
 			];
 			var boostX = [boostSpace,boostTime];
-			mat4.translate(renderer.scene.mvMat, renderer.scene.mvMat, [boostX[1], boostX[0], 0]);
+			mat4.translate(glutil.scene.mvMat, glutil.scene.mvMat, [boostX[1], boostX[0], 0]);
 			
 			var u0 = boostU[0];
 			var u1 = boostU[1];
@@ -270,8 +270,8 @@ function update() {
 			boostMatrix[1] = -u1;
 			boostMatrix[4] = -u1;
 			boostMatrix[5] = u0;	//symmetric, so if the matrix is transposed it won't matter
-			mat4.multiply(renderer.scene.mvMat, renderer.scene.mvMat, boostMatrix);
-			mat4.translate(renderer.scene.mvMat, renderer.scene.mvMat, [-boostX[1], -boostX[0], 0]);
+			mat4.multiply(glutil.scene.mvMat, glutil.scene.mvMat, boostMatrix);
+			mat4.translate(glutil.scene.mvMat, glutil.scene.mvMat, [-boostX[1], -boostX[0], 0]);
 		}
 
 		if (showPostBoost) {
@@ -279,7 +279,7 @@ function update() {
 		}
 
 		// render boost origin
-		mat4.translate(renderer.scene.mvMat, renderer.scene.mvMat, [boostSpace, boostTime, 0]);
+		mat4.translate(glutil.scene.mvMat, glutil.scene.mvMat, [boostSpace, boostTime, 0]);
 		for (var i = 0; i < 360; i++) {
 			var theta1 = i / 180 * Math.PI;
 			var x1 = .5 * Math.cos(theta1);
@@ -292,7 +292,7 @@ function update() {
 		drawLine({pts:[[-1,0,0],[1,0,0]], color:[1,1,0]});
 		drawLine({pts:[[0,-1,0],[0,1,0]], color:[1,1,0]});
 		drawLine({pts:[[-100,0,0],[100,0,0]], color:[.75,.5,0]});
-		mat4.translate(renderer.scene.mvMat, renderer.scene.mvMat, [-boostSpace, -boostTime, 0]);
+		mat4.translate(glutil.scene.mvMat, glutil.scene.mvMat, [-boostSpace, -boostTime, 0]);
 	
 		//render rays as lines
 		if (showTrace) {
@@ -330,7 +330,7 @@ function update() {
 		}
 	};
 
-	renderer.draw();
+	glutil.draw();
 
 	requestAnimFrame(update);
 
@@ -402,8 +402,8 @@ $(document).ready(function(){
 	$(canvas).disableSelection();
 
 	try {
-		renderer = new GL.CanvasRenderer({canvas:canvas});
-		gl = renderer.context;
+		glutil = new GLUtil({canvas:canvas});
+		gl = glutil.context;
 	} catch (e) {
 		$(canvas).remove();
 		$('#webglfail').show();
@@ -411,7 +411,7 @@ $(document).ready(function(){
 	}
 	$('#menu').show();
 	
-	renderer.dontDrawOnResize = true;
+	glutil.dontDrawOnResize = true;
 
 	$('input[name=boostFollow]').change(function() {
 		boostFollow = $('input[name=boostFollow]').get(0).checked;
@@ -426,8 +426,7 @@ $(document).ready(function(){
 		showPostBoost = $('input[name=showPostBoost]').get(0).checked;
 	}).get(0).checked = showPostBoost;
 
-	var plainShader = new GL.ShaderProgram({
-		context : gl,
+	var plainShader = new glutil.ShaderProgram({
 		vertexPrecision : 'best',
 		vertexCode : mlstr(function(){/*
 attribute vec3 vertex;
@@ -445,15 +444,12 @@ void main() {
 }*/})
 	});
 
-	lineObj = new GL.SceneObject({
-		context : gl,
-		scene : renderer.scene,
+	lineObj = new glutil.SceneObject({
 		mode : gl.LINES,
 		shader : plainShader,
 		uniforms : { color : [1,1,1] },
 		attrs : { 
-			vertex : new GL.ArrayBuffer({
-				context : gl,
+			vertex : new glutil.ArrayBuffer({
 				data : new Float32Array(6),
 				usage : gl.DYNAMIC_DRAW
 			})
