@@ -155,7 +155,7 @@ Let's say that, from Earth, it seems you're travelling along at \( u^\mu = (cosh
 But relative to yourself you seem to be at rest.  How to go from one to the other?
 What are we working with?  Let's go back to our 1D case, so \(u^\mu = (u^0, u^1, 0, 0) = (\gamma, \gamma v, 0, 0)\),
 for \(\gamma = {1 \over \sqrt{1 - v^2}}\).
-Then for simplicity, let \(\beta = \gamma v\), so \(u^\mu = (\gamma, \beta, 0, 0)\).<br>
+Then for convention, let \(\beta = v\), so \(u^\mu = (\gamma, \beta \gamma, 0, 0)\).<br>
 <br>
 \(
 \left[
@@ -174,7 +174,7 @@ u^3
 \matrix
 {
 \gamma \\
-\beta \\
+\beta \gamma \\
 0 \\  
 0
 }
@@ -192,10 +192,10 @@ Or in matrix form:<br>
 \left[
 \matrix
 {
-\gamma&-\beta&0&0 \\
--\beta&\gamma&0&0 \\
- 0&0&1&0 \\  
- 0&0&0&1
+\gamma & -\beta \gamma & 0 & 0 \\
+-\beta \gamma & \gamma & 0 & 0 \\
+ 0 & 0 & 1 & 0 \\  
+ 0 & 0 & 0 & 1
 }
 \right]
 
@@ -203,7 +203,7 @@ Or in matrix form:<br>
 \matrix
 {
 \gamma \\
-\beta \\
+\beta \gamma \\
 0 \\  
 0
 }
@@ -214,8 +214,8 @@ Or in matrix form:<br>
 \left[
 \matrix
 {
-\gamma^2 - \beta^2 \\
--\beta\gamma + \beta\gamma \\
+\gamma^2 - \beta^2 \gamma^2 \\
+-\beta \gamma^2 + \beta \gamma^2 \\
 0 \\  
 0
 }
