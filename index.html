@@ -14,7 +14,7 @@
 		<script type="text/javascript" src="/MathJax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 		<script type='text/javascript' src='main.js'></script>
 		
-<script type='text/javascript'>
+<!-- script type='text/javascript'>
 var _gaq = _gaq || [];
 _gaq.push(['_setAccount', 'UA-17312646-1']);
 _gaq.push(['_trackPageview']);
@@ -23,7 +23,7 @@ _gaq.push(['_trackPageview']);
 	ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
 	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
 })();
-</script>
+</script -->
 
 	</head>
 	<body style='margin:0px; overflow:hidden'>
@@ -31,7 +31,7 @@ _gaq.push(['_trackPageview']);
 			<img id='panelButton' src='menu.png' style='padding:5px'/>
 			<button id='infoButton' style='background-color:black; color:white; width:24px; height:24px; border:1px solid white; cursor:pointer; display:table-cell; align:center; vertical-align:top; margin:5px'>?</button><br>
 		</div>
-		<div id='panel' style='overflow:scroll; z-index:1; position:absolute; top:32px; display:none'>
+		<div id='panel' style='z-index:1; position:absolute; top:32px; display:none; font-color: white'>
 			<input name='boostFollow' type='checkbox'/>Follow Particle<br>
 			
 			<!-- input name='boostVel' type='text'/>Boost Velocity<br -->
@@ -55,7 +55,7 @@ with velocity \(v^i = (v^1, v^2, v^3)\).<br>
 Special relativity tells that, in flat spacetime,
 as your velocity in space changes, so does the rate you travel through time.
 The two are linked together such that the combined 4-velocity 
-\(u^\mu = (u^0, u^1, u^2, u^3)\) always has a norm of -1.<br>
+\(u^\mu = (u^0, u^1, u^2, u^3)\) will always have a norm of -1.<br>
 <br>
 The norm is calculated as \(||u|| = u \cdot u = u^\mu u_\mu = u^\mu \eta_{\mu\nu} u^\nu\),
 where \(\eta_{\mu\nu} = diag(-1,1,1,1)\) is the metric tensor of flat space.
