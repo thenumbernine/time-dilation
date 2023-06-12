@@ -1,23 +1,35 @@
-var canvas;
-var gl;
-var glutil;
-var view;
-var traces = [];
-var restTrace, movingTrace;
-var boostOrigin = {pos:[]};
-var grid;
-var boostVel = 0;
-var boostSpace = 0;
-var boostTime = 0;
-var restTime = 0;
-var dt = 0.05;
-var boostFollow = false;
-var showTrace = true;
-var showPreBoost = true;
-var showPostBoost = false;
-var followTrace;
+import {mat4} from '/js/gl-matrix-3.4.1/index.js';
+import {DOM, getIDs, removeFromParent, show, hide, hidden} from '/js/util.js';
+import {GLUtil} from '/js/gl-util.js';
+import {Mouse3D} from '/js/mouse3d.js';
 
-var lineObj;
+const ids = getIDs();
+window.ids = ids;
+
+const urlparams = new URLSearchParams(location.search);
+
+const _G = {};
+
+let canvas;
+let gl;
+let glutil;
+let view;
+let traces = [];
+let restTrace, movingTrace;
+let boostOrigin = {pos:[]};
+let grid;
+let boostVel = 0;
+let boostSpace = 0;
+let boostTime = 0;
+let restTime = 0;
+let dt = 0.05;
+_G.boostFollow = false;
+_G.showTrace = true;
+_G.showPreBoost = true;
+_G.showPostBoost = false;
+let followTrace;
+
+let lineObj;
 
 
 
@@ -27,11 +39,11 @@ args:
 	color[3] color of line
 */
 function drawLine(args) {
-	for (var i = 0; i < 3; i++) {
-		lineObj.attrs.vertex.data[i] = args.pts[0][i];
-		lineObj.attrs.vertex.data[i+3] = args.pts[1][i];
+	for (let i = 0; i < 3; i++) {
+		lineObj.attrs.vertex.buffer.data[i] = args.pts[0][i];
+		lineObj.attrs.vertex.buffer.data[i+3] = args.pts[1][i];
 	}
-	lineObj.attrs.vertex.updateData();
+	lineObj.attrs.vertex.buffer.updateData();
 
 	//and do the draw ...
 	lineObj.draw({
@@ -49,14 +61,14 @@ function Trace(args) {
 	this.rays = [];
 }
 
-var integrators = {
+let integrators = {
 	euler : function(t, x, dt, f) {
 		//return x + f(t,x) * t
 		//but javascript sucks and doesn't let you overload operators
 		return x.add(f(t,x).mul(dt));
 	}
 };
-var integrate = integrators.euler;
+let integrate = integrators.euler;
 
 function State(args) {
 	this.x = [0,0]; 
@@ -76,8 +88,8 @@ function State(args) {
 }
 State.prototype = {
 	add : function(otherState) {
-		var a = this;
-		var b = otherState;
+		let a = this;
+		let b = otherState;
 		return new State({
 			x : [a.x[0] + b.x[0], a.x[1] + b.x[1]],
 			u : [a.u[0] + b.u[0], a.u[1] + b.u[1]],
@@ -92,9 +104,9 @@ State.prototype = {
 		});
 	},
 	integrate : function(dt, accel) {
-		var tau = this.tau;
-		var newState = integrate(tau, this, dt, function(tau, state) {
-			var a;
+		let tau = this.tau;
+		let newState = integrate(tau, this, dt, function(tau, state) {
+			let a;
 			if (accel) {
 				a = accel(state, tau);
 			} else {
@@ -102,7 +114,7 @@ State.prototype = {
 			}
 			
 			/* Newton * /
-			var dxds = new State({
+			let dxds = new State({
 				x : state.u,
 				u : [1,a],
 				tau : 1
@@ -110,12 +122,12 @@ State.prototype = {
 			/**/
 
 			/* Minkowski */
-			var v = state.u[1];
+			let v = state.u[1];
 			//u[0] * a[0] - u[1] * a[1] = 0		<- orthogonal constraint
 			//u[0] * a[0] = u[1] * a[1]
 			//a[0] = a[1] * u[1] / u[0]
 			a = [a*v, a];
-			var dxds = new State({
+			let dxds = new State({
 				x : state.u,
 				u : a,
 				tau : 1
@@ -152,15 +164,15 @@ function resize() {
 	glutil.resize();
 
 
-	var info = $('#info');
-	var width = window.innerWidth 
-		- parseInt(info.css('padding-left'))
-		- parseInt(info.css('padding-right0'));
-	info.css(width + 'px');
-	var height = window.innerHeight
-		- parseInt(info.css('padding-top'))
-		- parseInt(info.css('padding-bottom'));
-	info.height(height - 32);
+	let info = ids.info;
+	let width = window.innerWidth 
+		- parseInt(info.style.padingLeft)
+		- parseInt(info.style.paddingRight);
+	info.style.width = width + 'px';
+	let height = window.innerHeight
+		- parseInt(info.style.paddingTop)
+		- parseInt(info.style.paddingBottom);
+	info.style.height = (height - 32)+'px';
 }
 
 function update() {
@@ -174,21 +186,21 @@ function update() {
 
 	// emit light beams at each state every tick of their local clock
 
-	var lastRestTime = restTime;
+	let lastRestTime = restTime;
 	restTime += dt;
 
-	var emitPeriod = 1;
+	let emitPeriod = 1;
 
-	for (var traceIndex = 0; traceIndex < traces.length; traceIndex++) {
-		var trace = traces[traceIndex];
+	for (let traceIndex = 0; traceIndex < traces.length; traceIndex++) {
+		let trace = traces[traceIndex];
 		if (trace.state.x[0] <= view.baseRange.maxY) {
 			if (trace.history.length > 0) {
-				var thisTick = Math.floor(trace.state.tau);
-				var lastTick = Math.floor(trace.history[trace.history.length-1].tau / emitPeriod);
+				let thisTick = Math.floor(trace.state.tau);
+				let lastTick = Math.floor(trace.history[trace.history.length-1].tau / emitPeriod);
 				if (thisTick != lastTick) {
-					var oldState = trace.state;
-					for (var dir = -1; dir <= 1; dir += 2) {
-						var state = new State(oldState);
+					let oldState = trace.state;
+					for (let dir = -1; dir <= 1; dir += 2) {
+						let state = new State(oldState);
 						state.u = [1,dir];
 						trace.rays.push({
 							src : new State(state),
@@ -201,15 +213,15 @@ function update() {
 	}
 
 	// integrate states
-	for (var traceIndex = 0; traceIndex < traces.length; traceIndex++) {
-		var trace = traces[traceIndex];
+	for (let traceIndex = 0; traceIndex < traces.length; traceIndex++) {
+		let trace = traces[traceIndex];
 		if (trace.state.x[0] <= view.baseRange.maxY) {
-			var oldp = trace.state;
+			let oldp = trace.state;
 			trace.state = oldp.integrate(dt / oldp.u[0], trace.accel);
 			trace.history.push(oldp);
 		}
-		for (var rayIndex = 0; rayIndex < trace.rays.length; rayIndex++) {
-			var ray = trace.rays[rayIndex];
+		for (let rayIndex = 0; rayIndex < trace.rays.length; rayIndex++) {
+			let ray = trace.rays[rayIndex];
 			if (ray.dst.x[0] <= view.baseRange.maxY) {
 				// integrate without relativity
 				ray.dst.x[1] = ray.dst.x[1] + ray.dst.u[1] * dt;
@@ -220,9 +232,9 @@ function update() {
 
 	glutil.ondraw = function() {
 
-		var renderGrid = function() {
+		let renderGrid = function() {
 			//render grid
-			for (var i=Math.ceil(view.minX); i <= Math.floor(view.maxX); i++) { 
+			for (let i=Math.ceil(view.minX); i <= Math.floor(view.maxX); i++) { 
 				drawLine({			
 					pts:[
 						[i, view.minY, 0],
@@ -231,7 +243,7 @@ function update() {
 					color:[.25,.25,.25]
 				});
 			}
-			for (var i=Math.ceil(view.minY); i <= Math.floor(view.maxY); i++) {
+			for (let i=Math.ceil(view.minY); i <= Math.floor(view.maxY); i++) {
 				drawLine({
 					pts:[
 						[view.minX, i, 0],
@@ -242,14 +254,14 @@ function update() {
 			}
 		};
 		
-		if (showPreBoost) {
+		if (_G.showPreBoost) {
 			renderGrid();
 		}
 		
 		//applyBoost
 		{
-			var boostU = [1,0];
-			if (boostFollow) {
+			let boostU = [1,0];
+			if (_G.boostFollow) {
 				if (followTrace) {
 					boostSpace = followTrace.state.x[1];
 					boostTime = followTrace.state.x[0];
@@ -260,12 +272,12 @@ function update() {
 				1 / Math.sqrt(1 - boostVel * boostVel),
 				boostVel * boostU[0]
 			];
-			var boostX = [boostSpace,boostTime];
+			let boostX = [boostSpace,boostTime];
 			mat4.translate(glutil.scene.mvMat, glutil.scene.mvMat, [boostX[1], boostX[0], 0]);
 			
-			var u0 = boostU[0];
-			var u1 = boostU[1];
-			var boostMatrix = mat4.create();	//initializes to identity
+			let u0 = boostU[0];
+			let u1 = boostU[1];
+			let boostMatrix = mat4.create();	//initializes to identity
 			boostMatrix[0] = u0;
 			boostMatrix[1] = -u1;
 			boostMatrix[4] = -u1;
@@ -274,19 +286,19 @@ function update() {
 			mat4.translate(glutil.scene.mvMat, glutil.scene.mvMat, [-boostX[1], -boostX[0], 0]);
 		}
 
-		if (showPostBoost) {
+		if (_G.showPostBoost) {
 			renderGrid();
 		}
 
 		// render boost origin
 		mat4.translate(glutil.scene.mvMat, glutil.scene.mvMat, [boostSpace, boostTime, 0]);
-		for (var i = 0; i < 360; i++) {
-			var theta1 = i / 180 * Math.PI;
-			var x1 = .5 * Math.cos(theta1);
-			var y1 = .5 * Math.sin(theta1);
-			var theta2 = (i+1) / 180 * Math.PI;
-			var x2 = .5 * Math.cos(theta2);
-			var y2 = .5 * Math.sin(theta2);
+		for (let i = 0; i < 360; i++) {
+			let theta1 = i / 180 * Math.PI;
+			let x1 = .5 * Math.cos(theta1);
+			let y1 = .5 * Math.sin(theta1);
+			let theta2 = (i+1) / 180 * Math.PI;
+			let x2 = .5 * Math.cos(theta2);
+			let y2 = .5 * Math.sin(theta2);
 			drawLine({pts:[[x1,y1,0],[x2,y2,0]], color:[1,1,0]});
 		}
 		drawLine({pts:[[-1,0,0],[1,0,0]], color:[1,1,0]});
@@ -295,11 +307,11 @@ function update() {
 		mat4.translate(glutil.scene.mvMat, glutil.scene.mvMat, [-boostSpace, -boostTime, 0]);
 	
 		//render rays as lines
-		if (showTrace) {
-			for (var traceIndex = 0; traceIndex < traces.length; traceIndex++) {
-				var trace = traces[traceIndex];
-				for (var rayIndex = 0; rayIndex < trace.rays.length; rayIndex++) {
-					var ray = trace.rays[rayIndex];
+		if (_G.showTrace) {
+			for (let traceIndex = 0; traceIndex < traces.length; traceIndex++) {
+				let trace = traces[traceIndex];
+				for (let rayIndex = 0; rayIndex < trace.rays.length; rayIndex++) {
+					let ray = trace.rays[rayIndex];
 					drawLine({
 						pts:[
 							[ray.src.x[1], ray.src.x[0], 0],
@@ -316,9 +328,9 @@ function update() {
 		}
 
 		//render state history
-		for (var traceIndex = 0; traceIndex < traces.length; traceIndex++) {
-			var trace = traces[traceIndex];
-			for (var i = 0;	i < trace.history.length-1; i++) {
+		for (let traceIndex = 0; traceIndex < traces.length; traceIndex++) {
+			let trace = traces[traceIndex];
+			for (let i = 0;	i < trace.history.length-1; i++) {
 				drawLine({
 					pts:[
 						[trace.history[i].x[1], trace.history[i].x[0], 0],
@@ -332,7 +344,7 @@ function update() {
 
 	glutil.draw();
 
-	requestAnimFrame(update);
+	requestAnimationFrame(update);
 
 	if (restTime > 50) initProblem();
 }
@@ -353,10 +365,10 @@ function initProblem() {
 		state : new State({x:[0,5.1]}),
 		color : [0,1,0],
 		accel : function(state, properTime) {
-			var movingAccel = .2;
-			var startDelay = 2;
-			var changeTime = 4;
-			var measuredTime = properTime; //state.x[0]
+			let movingAccel = .2;
+			let startDelay = 2;
+			let changeTime = 4;
+			let measuredTime = properTime; //state.x[0]
 			if (measuredTime < startDelay) return 0; //	wait one second
 			if (measuredTime < startDelay + changeTime) return movingAccel;
 			if (measuredTime < startDelay + changeTime * 3) return -movingAccel;
@@ -371,118 +383,107 @@ function initProblem() {
 
 }
 
-$(document).ready(function(){
-	$('#panelButton').click(function() {
-		var panel = $('#panel');	
-		if (panel.css('display') == 'none') {
-			panel.show();
-			$('#info').hide();
-		} else {
-			panel.hide();
-		}
-	});
-	$('#infoButton').click(function() {
-		var info = $('#info');
-		if (info.css('display') == 'none') {
-			info.show();
-			$('#panel').hide();
-		} else {
-			info.hide();
-		}
-	});
-	
-	
-	canvas = $('<canvas>', {
-		css : {
-			left : 0,
-			top : 0,
-			position : 'absolute'
-		}
-	}).prependTo(document.body).get(0);
-	$(canvas).disableSelection();
-
-	try {
-		glutil = new GLUtil({canvas:canvas});
-		gl = glutil.context;
-	} catch (e) {
-		$(canvas).remove();
-		$('#webglfail').show();
-		throw e;
+ids.panelButton.addEventListener('click', e => {
+	if (hidden(ids.panel)) {
+		show(ids.panel);
+		hide(ids.info);
+	} else {
+		hide(ids.panel);
 	}
-	$('#menu').show();
-	
-	glutil.dontDrawOnResize = true;
+});
+ids.infoButton.addEventListener('click', e => {
+	if (hidden(ids.info)) {
+		show(ids.info);
+		hide(ids.panel);
+	} else {
+		hide(ids.info);
+	}
+});
 
-	$('input[name=boostFollow]').change(function() {
-		boostFollow = $('input[name=boostFollow]').get(0).checked;
-	}).get(0).checked = boostFollow;
-	$('input[name=showTrace]').change(function() {
-		showTrace = $('input[name=showTrace]').get(0).checked;
-	}).get(0).checked = showTrace;
-	$('input[name=showPreBoost]').change(function() {
-		showPreBoost = $('input[name=showPreBoost]').get(0).checked;
-	}).get(0).checked = showPreBoost;
-	$('input[name=showPostBoost]').change(function() {
-		showPostBoost = $('input[name=showPostBoost]').get(0).checked;
-	}).get(0).checked = showPostBoost;
+canvas = DOM('canvas', {
+	css : {
+		left : 0,
+		top : 0,
+		position : 'absolute',
+		userSelect : 'none',
+	},
+	prependTo : document.body,
+});
 
-	var plainShader = new glutil.ShaderProgram({
-		vertexPrecision : 'best',
-		vertexCode : mlstr(function(){/*
-attribute vec3 vertex;
+try {
+	glutil = new GLUtil({canvas:canvas});
+	gl = glutil.context;
+} catch (e) {
+	removeFromParent(canvas);
+	show(ids.webglfail);
+	throw e;
+}
+show(ids.menu);
+
+glutil.dontDrawOnResize = true;
+
+['boostFollow', 'showTrace', 'showPreBoost', 'showPostBoost'].forEach(field => {
+	const o = document.querySelector('input[name='+field+']');
+	o.addEventListener('change', e => {
+		_G[field] = o.checked;
+	});
+	o.checked = _G[field];
+});
+
+let plainShader = new glutil.Program({
+	vertexCode : `
+in vec3 vertex;
 uniform mat4 mvMat;
 uniform mat4 projMat;
 void main() {
 	vec4 eyePos = mvMat * vec4(vertex, 1.);
 	gl_Position = projMat * eyePos;
-}*/}),
-		fragmentPrecision : 'best',
-		fragmentCode : mlstr(function(){/*
+}
+`,
+	fragmentCode : `
 uniform vec3 color;
+out vec4 fragColor;
 void main() {
-	gl_FragColor = vec4(color, 1.);
-}*/})
-	});
-
-	lineObj = new glutil.SceneObject({
-		mode : gl.LINES,
-		shader : plainShader,
-		uniforms : { color : [1,1,1] },
-		attrs : { 
-			vertex : new glutil.ArrayBuffer({
-				data : new Float32Array(6),
-				usage : gl.DYNAMIC_DRAW
-			})
-		},
-		parent : null,
-		static : true
-	});
-
-	initProblem();
-
-	view = {
-		posX : 0, posY : 0,
-		minX : 0, minY : 0,
-		maxX : 0, maxY : 0,
-		s : 0,
-		calcRange : function() {
-			this.baseRange = {
-				minX : -20, minY : 0/this.aspectRatio,
-				maxX : 20, maxY : 40/this.aspectRatio
-			};
-			var baseCenterX = (this.baseRange.maxX + this.baseRange.minX) * .5;
-			var baseCenterY = (this.baseRange.maxY + this.baseRange.minY) * .5;
-			this.minX = this.posX + (this.baseRange.minX - baseCenterX) / Math.exp(this.s) + baseCenterX;
-			this.minY = this.posY + (this.baseRange.minY - baseCenterY) / Math.exp(this.s) + baseCenterY;
-			this.maxX = this.posX + (this.baseRange.maxX - baseCenterX) / Math.exp(this.s) + baseCenterX;
-			this.maxY = this.posY + (this.baseRange.maxY - baseCenterY) / Math.exp(this.s) + baseCenterY;
-		}
-	};
-
-	$(window).resize(resize);
-	resize();
-
-	update();
+	fragColor = vec4(color, 1.);
+}
+`,
 });
 
+lineObj = new glutil.SceneObject({
+	mode : gl.LINES,
+	shader : plainShader,
+	uniforms : { color : [1,1,1] },
+	attrs : { 
+		vertex : new glutil.ArrayBuffer({
+			data : new Float32Array(6),
+			usage : gl.DYNAMIC_DRAW
+		})
+	},
+	parent : null,
+	static : true
+});
 
+initProblem();
+
+view = {
+	posX : 0, posY : 0,
+	minX : 0, minY : 0,
+	maxX : 0, maxY : 0,
+	s : 0,
+	calcRange : function() {
+		this.baseRange = {
+			minX : -20, minY : 0/this.aspectRatio,
+			maxX : 20, maxY : 40/this.aspectRatio
+		};
+		let baseCenterX = (this.baseRange.maxX + this.baseRange.minX) * .5;
+		let baseCenterY = (this.baseRange.maxY + this.baseRange.minY) * .5;
+		this.minX = this.posX + (this.baseRange.minX - baseCenterX) / Math.exp(this.s) + baseCenterX;
+		this.minY = this.posY + (this.baseRange.minY - baseCenterY) / Math.exp(this.s) + baseCenterY;
+		this.maxX = this.posX + (this.baseRange.maxX - baseCenterX) / Math.exp(this.s) + baseCenterX;
+		this.maxY = this.posY + (this.baseRange.maxY - baseCenterY) / Math.exp(this.s) + baseCenterY;
+	}
+};
+
+window.addEventListener('resize', resize);
+resize();
+update();
