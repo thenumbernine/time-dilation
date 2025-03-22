@@ -1,5 +1,6 @@
+import {Canvas} from '/js/dom.js';
 import {mat4} from '/js/gl-matrix-3.4.1/index.js';
-import {DOM, getIDs, removeFromParent, show, hide, hidden} from '/js/util.js';
+import {getIDs, removeFromParent, show, hide, hidden} from '/js/util.js';
 import {GLUtil} from '/js/gl-util.js';
 import {Mouse3D} from '/js/mouse3d.js';
 
@@ -400,8 +401,8 @@ ids.infoButton.addEventListener('click', e => {
 	}
 });
 
-canvas = DOM('canvas', {
-	css : {
+canvas = Canvas({
+	style : {
 		left : 0,
 		top : 0,
 		position : 'absolute',
